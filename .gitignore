@@ -1,0 +1,28 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfvars
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+
+# Function zip (generated in CI)
+functions/function-source.zip
+
+# Env files
+.env
+.env.local
+frontend/.env.local
+
+# OS
+.DS_Store

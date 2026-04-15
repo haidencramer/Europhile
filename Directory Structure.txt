@@ -1,0 +1,43 @@
+europhile/
+├── terraform/              # all infra definition
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── modules/
+│       ├── cloud_run/
+│       ├── firestore/
+│       ├── storage/
+│       └── functions/
+├── backend/                # Cloud Run FastAPI app
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── app/
+│       ├── main.py
+│       ├── routers/
+│       │   ├── gear.py
+│       │   ├── patches.py
+│       │   └── uploads.py
+│       ├── models/
+│       │   └── schemas.py
+│       └── db/
+│           └── firestore.py
+├── functions/              # Cloud Function (WAV metadata)
+│   ├── main.py
+│   └── requirements.txt
+├── frontend/               # React SPA
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── api/            # all fetch calls to Cloud Run
+│   │   └── App.jsx
+│   ├── package.json
+│   └── .firebaserc
+├── .github/
+│   └── workflows/
+│       └── deploy.yml      # CI/CD to Cloud Run + Firebase
+├── cleanup.sh              # terraform destroy wrapper
+└── README.md
+
+
+http://localhost:8081/docs this gave me HELLL
