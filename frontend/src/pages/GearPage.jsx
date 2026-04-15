@@ -11,6 +11,36 @@ const EMPTY = {
   purchase_price: '', condition: 'Good', notes: ''
 }
 
+function PriceTag({ price }) {
+  const [show, setShow] = useState(false)
+  return (
+    <div
+      onClick={() => setShow(v => !v)}
+      style={{
+        color:     show ? '#888' : '#333',
+        fontSize:  12,
+        marginBottom: 4,
+        cursor:    'pointer',
+        userSelect: 'none',
+      }}
+    >
+      {show ? `$${price.toFixed(2)}` : '$ ••••'}
+    </div>
+  )
+}
+
+function TotalValue({ value }) {
+  const [show, setShow] = useState(false)
+  return (
+    <div style={s.stat} onClick={() => setShow(v => !v)} title="Click to reveal">
+      <span style={{ ...s.statVal, cursor: 'pointer', userSelect: 'none' }}>
+        {show ? `$${value.toFixed(0)}` : '$••••'}
+      </span>
+      <span style={s.statLabel}>rack value</span>
+    </div>
+  )
+}
+
 export default function GearPage() {
   const [gear,        setGear]        = useState([])
   const [form,        setForm]        = useState(EMPTY)
@@ -71,10 +101,10 @@ export default function GearPage() {
       return 0
     })
 
-  const totalHP     = gear.reduce((s, g) => s + (g.hp_width || 0), 0)
-  const totalPos12  = gear.reduce((s, g) => s + (g.power_positive || 0), 0)
-  const totalNeg12  = gear.reduce((s, g) => s + (g.power_negative || 0), 0)
-  const totalValue  = gear.reduce((s, g) => s + (g.purchase_price || 0), 0)
+  const totalHP    = gear.reduce((s, g) => s + (g.hp_width || 0), 0)
+  const totalPos12 = gear.reduce((s, g) => s + (g.power_positive || 0), 0)
+  const totalNeg12 = gear.reduce((s, g) => s + (g.power_negative || 0), 0)
+  const totalValue = gear.reduce((s, g) => s + (g.purchase_price || 0), 0)
 
   if (loading) return <p style={s.muted}>Loading gear…</p>
   if (error)   return <p style={{ color: '#e57' }}>Error: {error}</p>
@@ -94,7 +124,7 @@ export default function GearPage() {
         <div style={s.stat}><span style={s.statVal}>{totalHP}</span><span style={s.statLabel}>total HP</span></div>
         <div style={s.stat}><span style={s.statVal}>{totalPos12}mA</span><span style={s.statLabel}>+12V draw</span></div>
         <div style={s.stat}><span style={s.statVal}>{totalNeg12}mA</span><span style={s.statLabel}>-12V draw</span></div>
-        <div style={s.stat}><span style={s.statVal}>${totalValue.toFixed(0)}</span><span style={s.statLabel}>total value</span></div>
+        {totalValue > 0 && <TotalValue value={totalValue} />}
       </div>
 
       {/* Add module form */}
@@ -219,9 +249,7 @@ export default function GearPage() {
             {g.rack_row && g.rack_position && (
               <div style={s.cardRow}>Row {g.rack_row}, slot {g.rack_position}</div>
             )}
-            {g.purchase_price && (
-              <div style={s.cardRow}>${g.purchase_price.toFixed(2)}</div>
-            )}
+            {g.purchase_price && <PriceTag price={g.purchase_price} />}
             {g.notes && <div style={s.cardNotes}>{g.notes}</div>}
             <button onClick={() => handleDelete(g.id)} style={s.del}>Remove</button>
           </div>

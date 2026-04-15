@@ -3,6 +3,7 @@ import GearPage      from './pages/GearPage'
 import PatchesPage   from './pages/PatchesPage'
 import PatchDetail   from './pages/PatchDetail'
 import RackPage      from './pages/RackPage'
+import ChartsPage from './pages/ChartsPage'
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
         <NavLink to="/"      style={navStyle} end>Gear</NavLink>
         <NavLink to="/rack"  style={navStyle}>Rack</NavLink>
         <NavLink to="/patches" style={navStyle}>Patches</NavLink>
+        <NavLink to="/charts" style={navStyle}>Analytics</NavLink>
       </nav>
       <main style={styles.main}>
         <Routes>
@@ -19,6 +21,7 @@ export default function App() {
           <Route path="/rack"          element={<RackPage />} />
           <Route path="/patches"       element={<PatchesPage />} />
           <Route path="/patches/:id"   element={<PatchDetail />} />
+          <Route path="/charts"        element={<ChartsPage />} />
         </Routes>
       </main>
     </BrowserRouter>
