@@ -48,3 +48,6 @@ export async function uploadAudio(patchId, file) {
   if (!gcsRes.ok) throw new Error('GCS upload failed')
   return object_path
 }
+
+export const getStreamUrl = (objectPath) =>
+  request(`/uploads/stream-url?object_path=${encodeURIComponent(objectPath)}`)

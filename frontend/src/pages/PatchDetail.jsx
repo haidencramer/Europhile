@@ -1,8 +1,70 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getPatch, updatePatch, listGear, uploadAudio } from '../api/client'
+import { getPatch, updatePatch, listGear, uploadAudio, getStreamUrl } from '../api/client'
 
 const KEYS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
+
+function formatDuration(seconds) {
+  if (!seconds) return null
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = Math.floor(seconds % 60)
+  if (h > 0) return `${h}h ${m}m ${s}s`
+  if (m > 0) return `${m}m ${s}s`
+  return `${s}s`
+}
+
+function AudioPlayer({ objectPath, filename }) {
+  const [url,     setUrl]     = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error,   setError]   = useState(null)
+  const [open,    setOpen]    = useState(false)
+
+  async function handlePlay() {
+    if (url) { setOpen(true); return }
+    setLoading(true)
+    setError(null)
+    try {
+      const { stream_url } = await getStreamUrl(objectPath)
+      setUrl(stream_url)
+      setOpen(true)
+    } catch (e) {
+      setError('Failed to load audio')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div>
+      {!open && (
+        <button onClick={handlePlay} style={ap.playBtn} disabled={loading}>
+          {loading ? 'Loading…' : '▶ Play'}
+        </button>
+      )}
+      {error && <span style={{ color: '#e57', fontSize: 12 }}>{error}</span>}
+      {open && url && (
+        <div style={ap.playerWrap}>
+          <audio
+            controls
+            autoPlay
+            src={url}
+            style={ap.audio}
+            onError={() => setError('Playback failed — try again')}
+          />
+          <button onClick={() => setOpen(false)} style={ap.closeBtn}>✕</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const ap = {
+  playBtn:    { background: '#1a2e1a', border: '1px solid #3a6a3a', color: '#7ec87e', padding: '4px 12px', borderRadius: 4, cursor: 'pointer', fontSize: 12, fontWeight: 600 },
+  playerWrap: { display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 },
+  audio:      { flex: 1, height: 36, accentColor: '#e8c97a' },
+  closeBtn:   { background: 'transparent', border: 'none', color: '#555', cursor: 'pointer', fontSize: 14, padding: '0 4px' },
+}
 
 export default function PatchDetail() {
   const { id } = useParams()
@@ -139,22 +201,19 @@ export default function PatchDetail() {
           </div>
           {patch.description && <p style={s.desc}>{patch.description}</p>}
 
-          {/* Meta pills */}
           <div style={s.metaRow}>
             {patch.bpm              && <span style={s.pill}>{patch.bpm} BPM</span>}
             {patch.key              && <span style={s.pill}>Key of {patch.key}</span>}
-            {patch.gear_ids?.length > 0  && <span style={s.pill}>{patch.gear_ids.length} modules</span>}
+            {patch.gear_ids?.length > 0   && <span style={s.pill}>{patch.gear_ids.length} modules</span>}
             {patch.audio_files?.length > 0 && <span style={s.pill}>{patch.audio_files.length} recordings</span>}
           </div>
 
-          {/* Tags */}
           {patch.tags?.length > 0 && (
             <div style={s.tags}>
               {patch.tags.map(t => <span key={t} style={s.tag}>#{t}</span>)}
             </div>
           )}
 
-          {/* Modules grid */}
           {patch.gear_ids?.length > 0 && (
             <div style={s.section}>
               <h2 style={s.h2}>Modules in this patch</h2>
@@ -166,9 +225,9 @@ export default function PatchDetail() {
                       <div style={s.moduleName}>{g?.name ?? gid}</div>
                       {g?.manufacturer && <div style={s.moduleMfr}>{g.manufacturer}</div>}
                       <div style={s.modulePills}>
-                        {g?.hp_width  && <span style={s.pill}>{g.hp_width}hp</span>}
-                        {g?.category  && <span style={s.pill}>{g.category}</span>}
-                        {g?.cv_inputs && <span style={s.pill}>{g.cv_inputs} CV in</span>}
+                        {g?.hp_width   && <span style={s.pill}>{g.hp_width}hp</span>}
+                        {g?.category   && <span style={s.pill}>{g.category}</span>}
+                        {g?.cv_inputs  && <span style={s.pill}>{g.cv_inputs} CV in</span>}
                         {g?.cv_outputs && <span style={s.pill}>{g.cv_outputs} CV out</span>}
                       </div>
                     </div>
@@ -178,7 +237,6 @@ export default function PatchDetail() {
             </div>
           )}
 
-          {/* Wiring notes */}
           {patch.wiring_notes && (
             <div style={s.section}>
               <h2 style={s.h2}>Wiring notes</h2>
@@ -207,7 +265,7 @@ export default function PatchDetail() {
               <div style={s.audioName}>{af.filename}</div>
               <div style={s.audioMeta}>
                 {af.duration_seconds != null
-                  ? <span style={s.pill}>{af.duration_seconds.toFixed(1)}s</span>
+                  ? <span style={s.pill}>{formatDuration(af.duration_seconds)}</span>
                   : <span style={s.pending}>processing…</span>}
                 {af.sample_rate_hz != null && (
                   <span style={s.pill}>{(af.sample_rate_hz / 1000).toFixed(1)} kHz</span>
@@ -215,6 +273,9 @@ export default function PatchDetail() {
                 {af.uploaded_at && (
                   <span style={s.uploadedAt}>{new Date(af.uploaded_at).toLocaleString()}</span>
                 )}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <AudioPlayer objectPath={af.object_path} filename={af.filename} />
               </div>
             </div>
           ))}
@@ -257,7 +318,7 @@ const s = {
   btnGhost:    { background: 'transparent', border: '1px solid #333', color: '#888', padding: '6px 14px', borderRadius: 4, cursor: 'pointer', fontSize: 13 },
   uploadRow:   { display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 },
   uploadMsg:   { color: '#7ec87e', fontSize: 13 },
-  audioList:   { display: 'flex', flexDirection: 'column', gap: 8 },
+  audioList:   { display: 'flex', flexDirection: 'column', gap: 12 },
   audioCard:   { background: '#111', border: '1px solid #222', borderRadius: 6, padding: '12px 16px' },
   audioName:   { color: '#ddd', fontSize: 14, fontWeight: 500, marginBottom: 6 },
   audioMeta:   { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' },

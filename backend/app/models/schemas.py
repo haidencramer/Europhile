@@ -74,3 +74,7 @@ class PresignedUrlRequest(BaseModel):
 class PresignedUrlResponse(BaseModel):
     upload_url: str
     object_path: str
+
+
+class StreamUrlResponse(BaseModel):
+    stream_url: str
