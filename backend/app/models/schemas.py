@@ -3,13 +3,24 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-# ── Gear (modules / semi-modulars) ─────────────────────────────────────────
+# ── Gear ───────────────────────────────────────────────────────────────────
 
 class GearBase(BaseModel):
     name: str
     manufacturer: str
-    module_type: str                  # e.g. "VCO", "VCF", "sequencer", "semi-modular"
-    hp_width: Optional[int] = None    # Eurorack panel width in HP; None for desktop gear
+    module_type: str
+    category: Optional[str] = None
+    hp_width: Optional[int] = None
+    rack_row: Optional[int] = None
+    rack_position: Optional[int] = None
+    power_positive: Optional[int] = None
+    power_negative: Optional[int] = None
+    cv_inputs: Optional[int] = None
+    cv_outputs: Optional[int] = None
+    audio_inputs: Optional[int] = None
+    audio_outputs: Optional[int] = None
+    purchase_price: Optional[float] = None
+    condition: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -24,7 +35,7 @@ class GearResponse(GearBase):
 # ── Audio file sub-document ─────────────────────────────────────────────────
 
 class AudioFile(BaseModel):
-    object_path: str               # GCS object key
+    object_path: str
     filename: str
     duration_seconds: Optional[float] = None
     sample_rate_hz: Optional[int] = None
@@ -36,8 +47,11 @@ class AudioFile(BaseModel):
 class PatchBase(BaseModel):
     title: str
     description: Optional[str] = None
-    gear_ids: list[str] = Field(default_factory=list)   # references to gear docs
+    gear_ids: list[str] = Field(default_factory=list)
     wiring_notes: Optional[str] = None
+    bpm: Optional[int] = None
+    key: Optional[str] = None
+    tags: list[str] = Field(default_factory=list)
 
 
 class PatchCreate(PatchBase):
@@ -60,3 +74,7 @@ class PresignedUrlRequest(BaseModel):
 class PresignedUrlResponse(BaseModel):
     upload_url: str
     object_path: str
+
+
+class StreamUrlResponse(BaseModel):
+    stream_url: str
