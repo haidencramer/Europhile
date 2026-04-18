@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getPatch, updatePatch, listGear, uploadAudio, getStreamUrl } from '../api/client'
+import { getPatch, updatePatch, listGear, uploadAudio, getStreamUrl, deleteAudio } from '../api/client'
 
 const KEYS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
 
@@ -14,7 +14,7 @@ function formatDuration(seconds) {
   return `${s}s`
 }
 
-function AudioPlayer({ objectPath, filename }) {
+function AudioPlayer({ objectPath }) {
   const [url,     setUrl]     = useState(null)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState(null)
@@ -136,6 +136,11 @@ export default function PatchDetail() {
     }
   }
 
+  async function handleDeleteAudio(objectPath) {
+    await deleteAudio(id, objectPath)
+    load()
+  }
+
   const gearMap = Object.fromEntries(gear.map(g => [g.id, g]))
 
   if (error)  return <p style={{ color: '#e57' }}>Error: {error}</p>
@@ -202,8 +207,8 @@ export default function PatchDetail() {
           {patch.description && <p style={s.desc}>{patch.description}</p>}
 
           <div style={s.metaRow}>
-            {patch.bpm              && <span style={s.pill}>{patch.bpm} BPM</span>}
-            {patch.key              && <span style={s.pill}>Key of {patch.key}</span>}
+            {patch.bpm               && <span style={s.pill}>{patch.bpm} BPM</span>}
+            {patch.key               && <span style={s.pill}>Key of {patch.key}</span>}
             {patch.gear_ids?.length > 0   && <span style={s.pill}>{patch.gear_ids.length} modules</span>}
             {patch.audio_files?.length > 0 && <span style={s.pill}>{patch.audio_files.length} recordings</span>}
           </div>
@@ -262,7 +267,16 @@ export default function PatchDetail() {
         <div style={s.audioList}>
           {patch.audio_files?.map((af, i) => (
             <div key={i} style={s.audioCard}>
-              <div style={s.audioName}>{af.filename}</div>
+              <div style={s.audioHeader}>
+                <div style={s.audioName}>{af.filename}</div>
+                <button
+                  onClick={() => handleDeleteAudio(af.object_path)}
+                  style={s.audioDelBtn}
+                  title="Delete recording"
+                >
+                  ✕
+                </button>
+              </div>
               <div style={s.audioMeta}>
                 {af.duration_seconds != null
                   ? <span style={s.pill}>{formatDuration(af.duration_seconds)}</span>
@@ -320,7 +334,9 @@ const s = {
   uploadMsg:   { color: '#7ec87e', fontSize: 13 },
   audioList:   { display: 'flex', flexDirection: 'column', gap: 12 },
   audioCard:   { background: '#111', border: '1px solid #222', borderRadius: 6, padding: '12px 16px' },
-  audioName:   { color: '#ddd', fontSize: 14, fontWeight: 500, marginBottom: 6 },
+  audioHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  audioName:   { color: '#ddd', fontSize: 14, fontWeight: 500 },
+  audioDelBtn: { background: 'transparent', border: 'none', color: '#444', cursor: 'pointer', fontSize: 13, padding: '0 4px', lineHeight: 1 },
   audioMeta:   { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' },
   pending:     { color: '#555', fontSize: 12, fontStyle: 'italic' },
   uploadedAt:  { color: '#444', fontSize: 11 },

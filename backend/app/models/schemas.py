@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-# ── Gear (modules / semi-modulars) ─────────────────────────────────────────
+# ── Gear ───────────────────────────────────────────────────────────────────
 
 class GearBase(BaseModel):
     name: str

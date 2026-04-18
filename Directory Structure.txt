@@ -41,3 +41,4 @@ europhile/
 
 
 http://localhost:8081/docs this gave me HELLL
+Figuring out how to delete both the document and wav file at the same time.

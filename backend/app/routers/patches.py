@@ -1,9 +1,23 @@
+import os
 from fastapi import APIRouter, HTTPException
+from google.cloud import storage
 from app.db.firestore import get_db
 from app.models.schemas import PatchCreate, PatchResponse
 
 router = APIRouter()
 COLLECTION = "patches"
+BUCKET = os.environ.get("GCS_BUCKET", "europhile-cloud-hc-audio")
+
+
+def delete_patch_audio(patch_id: str):
+    try:
+        client = storage.Client()
+        bucket = client.bucket(BUCKET)
+        blobs = list(bucket.list_blobs(prefix=f"patches/{patch_id}/"))
+        if blobs:
+            bucket.delete_blobs(blobs)
+    except Exception as e:
+        print(f"Warning: failed to delete GCS files for patch {patch_id}: {e}")
 
 
 @router.get("/", response_model=list[PatchResponse])
@@ -52,4 +66,5 @@ def delete_patch(patch_id: str):
     ref = db.collection(COLLECTION).document(patch_id)
     if not ref.get().exists:
         raise HTTPException(status_code=404, detail="Patch not found")
+    delete_patch_audio(patch_id)
     ref.delete()

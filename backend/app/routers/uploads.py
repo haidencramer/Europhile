@@ -2,6 +2,7 @@ import os
 import datetime
 from fastapi import APIRouter, HTTPException
 from google.cloud import storage
+from pydantic import BaseModel
 import google.auth
 from google.auth import impersonated_credentials
 
@@ -70,9 +71,6 @@ def get_stream_url(object_path: str):
     bucket = client.bucket(BUCKET)
     blob = bucket.blob(object_path)
 
-    if not blob.exists():
-        raise HTTPException(status_code=404, detail="Audio file not found")
-
     url = blob.generate_signed_url(
         version="v4",
         expiration=datetime.timedelta(minutes=60),
@@ -81,3 +79,30 @@ def get_stream_url(object_path: str):
     )
 
     return StreamUrlResponse(stream_url=url)
+
+
+class DeleteAudioRequest(BaseModel):
+    patch_id: str
+    object_path: str
+
+
+@router.delete("/audio", status_code=204)
+def delete_audio(payload: DeleteAudioRequest):
+    try:
+        client = storage.Client()
+        bucket = client.bucket(BUCKET)
+        blob = bucket.blob(payload.object_path)
+        if blob.exists():
+            blob.delete()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"GCS delete failed: {e}")
+
+    db = get_db()
+    patch_ref = db.collection("patches").document(payload.patch_id)
+    doc = patch_ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Patch not found")
+
+    audio_files = doc.to_dict().get("audio_files", [])
+    updated = [af for af in audio_files if af.get("object_path") != payload.object_path]
+    patch_ref.update({"audio_files": updated})
