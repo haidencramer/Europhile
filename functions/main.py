@@ -54,7 +54,7 @@ def extract_metadata(cloud_event):
 
     print(f"Extracted: duration={duration:.2f}s, sample_rate={sample_rate}Hz")
 
-    # Update the matching audio_file entry in Firestore
+    # Update the matching audio_file entry in Firestore with newly extracted metadata
     db = firestore.Client(project=PROJECT_ID)
     patch_ref = db.collection("patches").document(patch_id)
     patch_doc = patch_ref.get()

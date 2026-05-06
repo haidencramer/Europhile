@@ -129,9 +129,6 @@ patches/
 ### GCP Console — Firestore
 ![Firestore](docs/screenshots/gcp_firestore.png)
 
-### GCP Console — Cloud Function
-![Cloud Function](docs/screenshots/gcp_function.png)
-
 ---
 
 ## Local development
